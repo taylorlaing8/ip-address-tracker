@@ -1,0 +1,20 @@
+# IP Address Tracker
+
+## How It Works
+The AddressTracker is split into an interface, `IAddressTracker`, which defines the required 3 functions `requestHandled`, `top100`, and `clear`, and the `AddressTracker` class which implements this interface. Within this class there are 2 variables, `ipAddressMap` and `frequencyQueue`, which are used to manage how IP addresses are tracked. The `ipAddressMap` is a simple hashmap that uses the IP address as a key to fetching the frequency that it shows in the records that are passed into the tracker. The `frequencyQueue` is a priority queue which uses the `ipAddressMap` to determine priority by comparing the frequencies of the IP address strings it managed. This queue is what is used to keep track of the top 100 most frequently seen IP addresses.
+
+The `requestHandled` function can be called to add a new IP address to the `ipAddressMap` and to the `frequencyQueue` if it meets the frequency criteria. `top100` will remove records and return the reversed list that is created (thereby returning an ordered list of IP addresses from most frequent to least). `clear` simply clears the `ipAddressMap` and the `frequencyQueue`, initializing them back to 0 records.
+
+
+## Function Runtimes
+`requestHandled` runs at O(n) due to the time needed to add and remove from the `frequencyQueue`, which is based on a heap structure. This is because although adding is an O(log n) runtime, as is the remove call, it is the removal of the specific IP address on line 22 that can take up to O(N) to do the search on the IP address before an O(log n) removal. Note: this search is done to prevent duplicate IP addresses within the queue.
+
+`top100` runs at O(n) given that it loops through each record of the 100 existing in the `frequencyQueue` to return the reversed list of IP addresses (in order from greatest to least based on frequency). However, the argument could be made that it runs in constant time because it will always loop 100 times, making it a known constant runtime.
+
+`clear` runs at O(n) time as the clear functions need to loop through items to remove them. There is always the option to just initialize new objects and set them to the `ipAddressMap` and `frequencyQueue`, but the garbage collector would run this same O(n) function on its thread anyways and for the sake of a cleaner runtime I opted to clear them manually as this function call isn't time sensistive.
+
+## Alternative Approaches
+There are a couple other ways that this could be accomplished less efficiently. The brute force method of creating a class that would own an individual IP address and its frequency, and then create a single ArrayList of this type which would track these values and be used to calculate the top 100 (an expensive operation at a scale of 20M+ records). Another option was to use the HashMap implementation I have, but with a list or binary tree in place of the priority queue. Using a tree would make lookups to prevent duplicates only O(log N) vs. the current O(n), but the benefit of retrieiving records in order of frequency (priority) would be lost, which is a benefit in the request handler that needs to know whether or not to add a record to this list by comparing its frequency with the lowest frequency item currently there.
+
+## How Testing Is Done
+The code can be tested by running the default main method, in which 6 calls to a testAddressTracker method are made with incremementally larger requirements for the number of records that should be generated and processed. The tracker is initialized once in order to test that the `clear` function works between these tests. In the console the time taken to execute each function is given, of which the `top100` method was consistently below 1ms runtime (given the requirment of being below 300ms). Finally the `top100` list is tested to ensure it contains the expected IP addresses, and that they are in order of frequency from most to least frequent.

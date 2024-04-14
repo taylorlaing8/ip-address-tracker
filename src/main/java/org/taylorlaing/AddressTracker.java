@@ -38,7 +38,7 @@ public class AddressTracker implements IAddressTracker {
         List<String> frequencyQueueList = new ArrayList<>();
 
         while (!this.frequencyQueue.isEmpty()) {
-            String ipAddress = this.frequencyQueue.remove();
+            String ipAddress = this.frequencyQueue.poll();
 
             tempFrequencyQueue.add(ipAddress);
             frequencyQueueList.add(ipAddress);
